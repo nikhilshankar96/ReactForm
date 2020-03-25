@@ -1,171 +1,451 @@
-import React, { Fragment } from "react";
+import React, { useEffect, useState } from "react";
+import { TextInput, Toast, Button } from "react-materialize";
+import Table from "./Table";
+
+import M from "materialize-css";
 
 const Form = () => {
-	//
-	//validate names and comments
-	const validateString = e => {
-		let regex = /^[a-zA-Z ]{2,20}$/;
-		let strVal = e.target.value.toString().trim();
-		if (strVal !== "" && regex.test(strVal)) {
-			return true;
-		} else {
-			e.target.classList.add("invalid");
-			return false;
-		}
+	const [showTable, setShowTable] = useState(false);
+
+	//Query selectors
+	const $ = document.querySelector.bind(document);
+	const $$ = document.querySelectorAll.bind(document);
+	useEffect(() => {
+		let elems = document.querySelectorAll("select");
+		let instances = M.FormSelect.init(elems);
+	}, []);
+
+	const data = {
+		title: "",
+		name: "",
+		email: "",
+		phone: "",
+		zip: "",
+		source: "",
+		comment: ""
 	};
 
-	//validate email
-	const validateEmail = input => {
-		let email = input.value.toString().trim();
-		var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-		if (re.test(email)) {
+	const radioValidate = () => {
+		document.getElementsByName("group1").forEach(element => {
+			if (element.checked) {
+				data.title = element.value;
+			}
+		});
+		return true;
+	};
+
+	const validateName = () => {
+		let input = $("#name");
+		let str = input.value.toString().trim();
+		let regex = /^[a-zA-Z ]{2,40}$/;
+
+		if (str !== "" && regex.test(str)) {
+			input.classList.remove("invalid");
+			input.classList.add("valid");
+			data.name = str;
+
 			return true;
 		} else {
 			input.classList.add("invalid");
+			input.classList.remove("valid");
+			data.name = "";
+			return false;
+		}
+	};
+	const validateComment = () => {
+		let input = $("#comment");
+		let str = input.value.toString().trim();
+		let regex = /^[a-zA-Z ]{2,200}$/;
+
+		if (str !== "" && regex.test(str)) {
+			input.classList.remove("invalid");
+			input.classList.add("valid");
+			data.comment = str;
+
+			return true;
+		} else {
+			input.classList.add("invalid");
+			input.classList.remove("valid");
+			data.comment = "";
 			return false;
 		}
 	};
 
-	//validate numbers
+	const validateEmail = () => {
+		let input = $("#email");
+		let str = input.value.toString().trim();
+		let regex = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+
+		if (str !== "" && regex.test(str)) {
+			input.classList.remove("invalid");
+			input.classList.add("valid");
+			data.email = str;
+			return true;
+		} else {
+			input.classList.add("invalid");
+			input.classList.remove("valid");
+			data.email = "";
+			return false;
+		}
+	};
+
 	const validatePhone = () => {
-		let reg = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/im;
-		let e = email.value;
-		if (reg.test(e.target.value)) {
-			e.target.classList.add("valid");
-			e.target.classList.remove("invalid");
+		let input = $("#phone");
+		let str = input.value;
+
+		let regex = /^(1\s?)?((\([0-9]{3}\))|[0-9]{3})[\s\-]?[\0-9]{3}[\s\-]?[0-9]{4}$/;
+
+		if (str !== "" && regex.test(str)) {
+			input.classList.remove("invalid");
+			input.classList.add("valid");
+			data.phone = str;
+
 			return true;
 		} else {
-			e.target.classList.add("invalid");
-			e.target.classList.remove("valid");
+			input.classList.add("invalid");
+			input.classList.remove("valid");
+			data.phone = "";
 			return false;
 		}
 	};
 
-	//validate zip
-	const validateZip = zip => {
-		let reg = /^\d{5}$|^\d{5}-\d{4}$/;
-		if (reg.test(zip.value)) {
-			zip.classList.remove("invalid");
+	const validateZip = () => {
+		let input = $("#zip");
+		let str = input.value;
+		let regex = /^\d{5}(?:[-\s]\d{4})?$/;
+
+		if (str !== "" && regex.test(str)) {
+			input.classList.remove("invalid");
+			input.classList.add("valid");
+			data.zip = str;
+
 			return true;
 		} else {
-			zip.classList.add("invalid");
+			input.classList.add("invalid");
+			input.classList.remove("valid");
+			data.zip = "";
 			return false;
 		}
 	};
-	//
+
+	const validateCheckboxes = () => {
+		// console.log("!!!");
+		let checkBoxes = document.getElementsByClassName("checkBoxes");
+		// console.log(checkBoxes);
+		for (let i = 0; i < 3; i++) {
+			if (checkBoxes[i].checked && !data.source.includes(checkBoxes[i].value)) {
+				data.source += checkBoxes[i].value + " ";
+			} else if (
+				!checkBoxes[i].checked &&
+				data.source.includes(checkBoxes[i].value)
+			) {
+				data.source = data.source.replace(checkBoxes[i].value, "");
+			}
+		}
+
+		if (data.source.trim() == "") {
+			$("#checkError").innerHTML = "Select at least one checkbox!";
+			return false;
+		} else {
+			$("#checkError").innerHTML = "";
+			return true;
+		}
+	};
+
+	const handleSubmit = event => {
+		event.preventDefault();
+		if (
+			radioValidate() &&
+			validateName() &&
+			validateEmail() &&
+			validatePhone() &&
+			validateZip() &&
+			validateComment() &&
+			validateCheckboxes()
+		) {
+			data.source = data.source
+				.trim()
+				.split(" ")
+				.join("   ");
+			if (localStorage.getItem("formData")) {
+				let formData = JSON.parse(localStorage.getItem("formData"));
+				formData.push(data);
+				localStorage.setItem("formData", JSON.stringify(formData));
+			} else {
+				localStorage.setItem("formData", JSON.stringify([data]));
+			}
+			setShowTable(true);
+		} else {
+			M.toast({ html: "Please correct fields before submitting!" });
+		}
+	};
+
+	const changeView = () => setShowTable(!showTable);
+
+	useEffect(() => {}, [showTable]);
+
 	return (
-		<Fragment>
-			<div className='container row center-align'>
-				<h3>Form</h3>
-				<form>
-					<div className='input-field col s12 l6'>
-						<input
-							id='fname'
-							type='text'
-							className='validate'
-							required
-							onChange={validateString}
-						/>
-						<label htmlFor='fname'>First Name</label>
+		<div className=''>
+			<h2>
+				<b>Feedback</b>
+			</h2>
+			{!showTable && (
+				<div className='formDiv container'>
+					<div className='center'>
+						<h3>Love something? Hate something? Let us know!</h3>
+						<h6 className='red-text'>
+							Note: Fields marked with an asterisk (
+							<span className='red-text'>&#9733;</span>) are mandatory
+						</h6>
 					</div>
-					<div className='input-field col s12 l6'>
-						<input id='lname' type='text' className='validate' required />
-						<label htmlFor='lname'>Last Name</label>
-					</div>
-					<div className='input-field col s12 l6'>
-						<input id='email' type='email' className='validate' required />
-						<label htmlFor='email'>Email</label>
-					</div>
-					<div className='input-field col s12 l6'>
-						<input
-							id='number'
-							type='number'
-							className='validate'
-							required
-							onChange={validatePhone(this)}
-						/>
-						<label htmlFor='number'>Number</label>
-					</div>
-					<div className='input-field col s12 l6'>
-						<input id='zip' type='number' className='validate' required />
-						<label htmlFor='zip'>Zip</label>
-					</div>
+					<div className='row'>
+						<form action='#' style={{ marginTop: "35px" }}>
+							<div className='col s12' style={{ fontSize: "20px" }}>
+								<span>Title</span>
+							</div>
+							<div
+								className='col s12 valign-wrapper'
+								id='prefix-div'
+								style={{ marginTop: "15px" }}
+							>
+								<div className='col s4 waves waves-effect'>
+									<label>
+										<input
+											name='group1'
+											id='mr-radio'
+											value='Mr.'
+											type='radio'
+											defaultChecked
+											onChange={radioValidate}
+										/>
+										<span>Mr.</span>
+									</label>
+								</div>
+								<div className='col s4 waves waves-effect'>
+									<label>
+										<input
+											name='group1'
+											id='ms-radio'
+											value='Ms.'
+											type='radio'
+											onChange={radioValidate}
+										/>
+										<span>Ms.</span>
+									</label>
+								</div>
+								<div className='col s4 waves waves-effect'>
+									<label>
+										<input
+											name='group1'
+											id='mrs-radio'
+											value='Mrs.'
+											type='radio'
+											onChange={radioValidate}
+										/>
+										<span>Mrs.</span>
+									</label>
+								</div>
+							</div>
+							<div
+								className='col s12 valign-wrapper'
+								style={{ marginTop: "25px" }}
+							>
+								<div className='input-field col s12'>
+									<input
+										id='name'
+										type='text'
+										className=''
+										required
+										onChange={validateName}
+									/>
+									<label htmlFor='name'>
+										Name&nbsp; <span className='red-text'>&#9733;</span>
+									</label>
 
-					<div className='row container'>
-						<h6 style={{ textAlign: "left" }}>How did you hear about us?</h6>
-						<div className='col s4'>
-							<p>
-								<label>
+									<span
+										className='helper-text'
+										data-error={validateName ? "Enter a valid name" : ""}
+										data-success=''
+									></span>
+								</div>
+							</div>
+
+							<div className='col s12 valign-wrapper'>
+								<div className='input-field col s12'>
 									<input
-										type='checkbox'
-										class='checks'
-										id='fb-check'
-										// onchange='validateCheckboxes'
+										id='email'
+										type='email'
+										className=''
+										required
+										onChange={validateEmail}
 									/>
-									<span>Facebook</span>
-								</label>
-							</p>
-						</div>
-						<div className='col s4'>
-							<p>
-								<label>
+									<label htmlFor='email'>
+										Email&nbsp; <span className='red-text'>&#9733;</span>
+									</label>
+
+									<span
+										className='helper-text'
+										data-error={validateEmail ? "Enter a valid email" : ""}
+										data-success=''
+									></span>
+								</div>
+							</div>
+							<div className='col s12 valign-wrapper' style={{}}>
+								<div className='input-field col s12'>
 									<input
-										type='checkbox'
-										class='checks'
-										id='l-check'
-										// onchange='validateCheckboxes'
+										id='phone'
+										type='number'
+										className=''
+										required
+										onChange={validatePhone}
 									/>
-									<span>LinkedIn</span>
-								</label>
-							</p>
-						</div>
-						<div className='col s4'>
-							<p>
-								<label>
+									<label htmlFor='phone'>
+										Phone&nbsp; <span className='red-text'>&#9733;</span>
+									</label>
+
+									<span
+										className='helper-text'
+										data-error={validatePhone ? "Enter a valid phone" : ""}
+										data-success=''
+									></span>
+								</div>
+							</div>
+							<div className='col s12 valign-wrapper' style={{}}>
+								<div className='input-field col s12'>
 									<input
-										type='checkbox'
-										class='checks'
-										id='t-check'
-										// onchange='validateCheckboxes'
+										id='zip'
+										type='number'
+										className=''
+										required
+										onChange={validateZip}
 									/>
-									<span>Twitter</span>
-								</label>
-							</p>
-						</div>
-					</div>
-					<div className='input-field col s12 l6'>
-						<input id='comment' type='text' className='validate' required />
-						<label htmlFor='comment'>Comments</label>
-					</div>
-					{/*  */}
-					<div class='col s12'>
-						<div style={{ height: "50px" }}></div>
-						<div class='col s6 center'>
-							<a
-								class='waves-effect waves-light btn'
-								id='submitBtn'
-								onclick='submitFn()'
+									<label htmlFor='Zip'>
+										Zip&nbsp; <span className='red-text'>&#9733;</span>
+									</label>
+
+									<span
+										className='helper-text'
+										data-error={validateZip ? "Enter a valid Zip" : ""}
+										data-success=''
+									></span>
+								</div>
+							</div>
+							<div
+								className='col s12 valign-wrapper'
+								// style={{ marginTop: "25px" }}
 							>
-								Submit
-							</a>
-						</div>
-						<div class='col s6 center'>
-							<a
-								class='waves-effect waves-light btn red'
-								id='resetBtn'
-								onclick='resetFn()'
+								<div className='input-field col s12'>
+									<input
+										id='comment'
+										type='text'
+										className=''
+										required
+										onChange={validateComment}
+									/>
+									<label htmlFor='comment'>
+										Comment&nbsp; <span className='red-text'>&#9733;</span>
+									</label>
+
+									<span
+										className='helper-text'
+										data-error={validateComment ? "Enter a valid comment" : ""}
+										data-success=''
+									></span>
+								</div>
+							</div>
+
+							<div
+								className='col s12'
+								style={{ fontSize: "20px", marginBottom: "20px" }}
 							>
-								Reset
-							</a>
-						</div>
+								<span>How did you hear about us?</span>
+							</div>
+
+							<div
+								className='row col valign-wrapper center-align'
+								style={{ width: "99%" }}
+							>
+								<div className='col s6 m4' style={{ width: "33%" }}>
+									<label>
+										<input
+											type='checkbox'
+											className='checkBoxes'
+											id='f-check'
+											value='FaceBook'
+											onChange={validateCheckboxes}
+										/>
+										<span>Facebook</span>
+									</label>
+								</div>
+								<div className='col s4'>
+									{" "}
+									<label>
+										<input
+											type='checkbox'
+											className='checkBoxes'
+											id='l-check'
+											value='LinkedIn'
+											onChange={validateCheckboxes}
+										/>
+										<span>LinkedIn</span>
+									</label>
+								</div>
+								<div className='col s4'>
+									{" "}
+									<label>
+										<input
+											type='checkbox'
+											className='checkBoxes'
+											id='r-check'
+											value='Reddit'
+											onChange={validateCheckboxes}
+										/>
+										<span>Reddit</span>
+									</label>
+								</div>
+							</div>
+							<div
+								className='col s12'
+								style={{
+									fontSize: "20px",
+									marginBottom: "50px",
+									height: "30px"
+								}}
+							>
+								<span className='invalid red-text' id='checkError'>
+									{"     "}
+								</span>
+							</div>
+							<div className='col s12'>
+								<Button
+									className='waves waves-effect z-depth-2 cyan'
+									large
+									onClick={handleSubmit}
+								>
+									<strong>Submit</strong>
+								</Button>
+							</div>
+						</form>
 					</div>
-					{/*  */}
-				</form>
-			</div>
-		</Fragment>
+				</div>
+			)}
+			{showTable && (
+				<div className='tableDiv' style={{ width: "100%" }}>
+					<Table show={showTable} />
+
+					<Button
+						onClick={changeView}
+						style={{
+							marginTop: "20px",
+							marginBottom: "40px"
+						}}
+					>
+						Add another entry
+					</Button>
+				</div>
+			)}
+		</div>
 	);
 };
 
 export default Form;
-//  <input id="email" type="email" class="validate">
-//           <label for="email">Email</label>
