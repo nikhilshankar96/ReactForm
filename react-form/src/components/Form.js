@@ -6,14 +6,27 @@ import M from "materialize-css";
 
 const Form = () => {
 	const [showTable, setShowTable] = useState(false);
+	const [state, setState] = useState({
+		title: "",
+		name: "",
+		email: "",
+		phone: "",
+		zip: "",
+		source: "",
+		comment: ""
+	});
 
 	//Query selectors
 	const $ = document.querySelector.bind(document);
-	const $$ = document.querySelectorAll.bind(document);
 	useEffect(() => {
 		let elems = document.querySelectorAll("select");
 		let instances = M.FormSelect.init(elems);
+		radioValidate();
 	}, []);
+
+	useEffect(() => {
+		console.log(state);
+	}, [state]);
 
 	const data = {
 		title: "",
@@ -29,6 +42,7 @@ const Form = () => {
 		document.getElementsByName("group1").forEach(element => {
 			if (element.checked) {
 				data.title = element.value;
+				setState({ ...state, title: element.value });
 			}
 		});
 		return true;
@@ -43,12 +57,14 @@ const Form = () => {
 			input.classList.remove("invalid");
 			input.classList.add("valid");
 			data.name = str;
+			setState({ ...state, name: str });
 
 			return true;
 		} else {
 			input.classList.add("invalid");
 			input.classList.remove("valid");
 			data.name = "";
+			setState({ ...state, name: "" });
 			return false;
 		}
 	};
@@ -61,12 +77,14 @@ const Form = () => {
 			input.classList.remove("invalid");
 			input.classList.add("valid");
 			data.comment = str;
+			setState({ ...state, comment: str });
 
 			return true;
 		} else {
 			input.classList.add("invalid");
 			input.classList.remove("valid");
 			data.comment = "";
+			setState({ ...state, comment: "" });
 			return false;
 		}
 	};
@@ -80,11 +98,14 @@ const Form = () => {
 			input.classList.remove("invalid");
 			input.classList.add("valid");
 			data.email = str;
+			setState({ ...state, email: str });
+
 			return true;
 		} else {
 			input.classList.add("invalid");
 			input.classList.remove("valid");
 			data.email = "";
+			setState({ ...state, email: "" });
 			return false;
 		}
 	};
@@ -99,12 +120,14 @@ const Form = () => {
 			input.classList.remove("invalid");
 			input.classList.add("valid");
 			data.phone = str;
+			setState({ ...state, phone: str });
 
 			return true;
 		} else {
 			input.classList.add("invalid");
 			input.classList.remove("valid");
 			data.phone = "";
+			setState({ ...state, phone: "" });
 			return false;
 		}
 	};
@@ -118,12 +141,14 @@ const Form = () => {
 			input.classList.remove("invalid");
 			input.classList.add("valid");
 			data.zip = str;
+			setState({ ...state, zip: str });
 
 			return true;
 		} else {
 			input.classList.add("invalid");
 			input.classList.remove("valid");
 			data.zip = "";
+			setState({ ...state, zip: "" });
 			return false;
 		}
 	};
@@ -135,11 +160,19 @@ const Form = () => {
 		for (let i = 0; i < 3; i++) {
 			if (checkBoxes[i].checked && !data.source.includes(checkBoxes[i].value)) {
 				data.source += checkBoxes[i].value + " ";
+				setState({
+					...state,
+					source: data.source
+				});
 			} else if (
 				!checkBoxes[i].checked &&
 				data.source.includes(checkBoxes[i].value)
 			) {
-				data.source = data.source.replace(checkBoxes[i].value, "");
+				data.source = data.source.replace(checkBoxes[i].value, " ");
+				setState({
+					...state,
+					source: data.source
+				});
 			}
 		}
 
@@ -169,10 +202,10 @@ const Form = () => {
 				.join("   ");
 			if (localStorage.getItem("formData")) {
 				let formData = JSON.parse(localStorage.getItem("formData"));
-				formData.push(data);
+				formData.push(state);
 				localStorage.setItem("formData", JSON.stringify(formData));
 			} else {
-				localStorage.setItem("formData", JSON.stringify([data]));
+				localStorage.setItem("formData", JSON.stringify([state]));
 			}
 			setShowTable(true);
 		} else {
